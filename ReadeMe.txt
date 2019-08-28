@@ -1,0 +1,28 @@
+Dash Layout
+    The children property is special. By convention, it's always the first attribute which means that you can omit it: html.H1(children='Hello Dash') is the same as html.H1('Hello Dash'). Also, it can contain a string, a number, a single component, or a list of components.
+
+
+
+Docker-Compose
+    
+    $ docker-compose up
+        docker-compose up --build # to rebuild
+    
+    $ docker-compose down
+
+    $ docker-compose run web python manage.py startapp polls
+
+    $ docker-compose run web python manage.py makemigrations polls
+
+    $ docker-compose run web python manage.py migrate
+
+    $ docker-compose run web python manage.py createsuperuser
+
+    $ docker-compose run web python manage.py shell
+
+    $ docker-compose run web python manage.py test polls
+
+    $ docker system prune -a # delete all
+
+References:
+    https://dash.plot.ly/getting-started
