@@ -1,172 +1,250 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
+
 import pandas as pd
 import plotly.graph_objs as go
+import random
 
-# import numpy as np
-# from datetime import datetime, timedelta
-# import plotly.graph_objs as go
+df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv')
+'''
+    origin data
+    ountry,year,pop,continent,lifeExp,gdpPercap
+    Albania,1952,1282697,Europe,55.23,1601.056136
+    Albania,1957,1476505,Europe,59.28,1942.284244
+    Albania,1962,1728137,Europe,64.82,2312.888958
 
-# date_today = datetime.now()
-# days = pd.date_range(date_today, date_today+timedelta(30), freq='D')
-# sales = np.random.randint(70, high=100, size=len(days))
-# data = pd.DataFrame({'date': days, 'Sales': sales})
+'''
 
+df2 = pd.read_csv(
+    'https://gist.githubusercontent.com/chriddyp/cb5392c35661370d95f300086accea51/raw/8e0768211f6b747c0db42a9ce9a0937dafcbd8b2/indicators.csv'
+)
+'''
+,Country Name,Indicator Name,Year,Value
+0,Arab World,"Agriculture, value added (% of GDP)",1952,
+1,Arab World,CO2 emissions (metric tons per capita),1952,
+2,Arab World,Domestic credit provided by financial sector (% of GDP),1952,
+3,Arab World,Electric power consumption (kWh per capita),1952,
+4,Arab World,Energy use (kg of oil equivalent per capita),1952,
+5,Arab World,Exports of goods and services (% of GDP),1952,
+'''
+df2['Value'] = df2['Value'].apply(lambda x: random.random() * 100 ) 
+# pd.set_option('display.expand_frame_repr', False)
+# print(df2.head())
+available_indicators = df2['Indicator Name'].unique()
+
+all_optioins = {
+    'America': ['New York', 'San Francisco', 'Chicago'],
+    'Korea': ['Seoul', 'Busan']
+}
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-df1 = pd.read_csv('https://gist.githubusercontent.com/chriddyp/'
-    'c78bf172206ce24f77d6363a2d754b59/raw/'
-    'c353e8ef842413cae56ae3920b8fd78468aa4cb2/'
-    'usa-agricultural-exports-2011.csv')
-
-'''
-    --origin data--
-    ,state,total exports,beef,pork,poultry,dairy,fruits fresh,fruits proc,total fruits,veggies fresh,veggies proc,total veggies,corn,wheat,cotton
-    0,Alabama,1390.63,34.4,10.6,481.0,4.06,8.0,17.1,25.11,5.5,8.9,14.33,34.9,70.0,317.61
-    1,Alaska,13.31,0.2,0.1,0.0,0.19,0.0,0.0,0.0,0.6,1.0,1.56,0.0,0.0,0.0
-'''
-
-df2 = pd.read_csv('https://gist.githubusercontent.com/chriddyp/' +
-    '5d1ea79569ed194d432e56108a04d188/raw/' +
-    'a9f9e8076b837d541398e999dcbac2b2826a81f8/'+
-    'gdp-life-exp-2007.csv')
-
-'''
-    --origin data--
-    ,country,continent,population,life expectancy,gdp per capita
-    11,Afghanistan,Asia,31889923.0,43.828,974.5803384
-    23,Albania,Europe,3600523.0,76.423,5937.029526
-    35,Algeria,Africa,33333216.0,72.301,6223.367465
-'''
-def generate_table(dataframe, max_rows=10):
-    return html.Table(
-        [html.Tr([html.Th(col) for col in dataframe.columns])] +
-        [html.Tr([
-            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-        ]) for i in range(min(len(dataframe), max_rows))]
-    )
-
-markdown_text = '''
-### Dash and Markdown
-
-Dash apps can be written in Markdown.
-Dash uses the [CommonMark](http://commonmark.org/)
-specification of Markdown.
-Check out their [60 Second Markdown Tutorial](http://commonmark.org/help/)
-if this is your first introduction to Markdown!
-'''
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
+app = dash.Dash(__name__, external_stylesheets = external_stylesheets)
 
 app.layout = html.Div([
-    html.H1('Hello Dash'),
+    dcc.Input(id='my-id', value='initial value', type='text'),
+    html.Div(id='my-div'),
 
-    html.Div('''
-        Dash: A web application framework for Python
-    '''),
-
-    dcc.Graph(
-        id='example-graph',
-        figure={
-            'data':[
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': 'SJ'},
-            ],
-            'layout': {
-                'title': 'Dash Data Visulization'
-            }
-        }
-    ),
-    
-    html.H4('CSV example'),
-    generate_table(df1),
-
-    html.H4('Graph example'),
-    dcc.Graph(
-        id='life-exp-vs-gdp',
-        figure={
-            'data': [
-                go.Scatter(
-                    x=df2[df2['continent'] == i]['gdp per capita'],
-                    y=df2[df2['continent'] == i]['life expectancy'],
-                    text=df2[df2['continent'] == i]['country'], # when hover on dot
-                    mode='markers',
-                    opacity=0.7, # dot darkness
-                    marker={
-                        'size': 15,
-                        'line': {'width': 0.5, 'color': 'white'} # edge
-                    },
-                    name= i
-                ) for i in df2.continent.unique()
-            ],
-            'layout': go.Layout(
-                xaxis={'type': 'log', 'title': 'GDP Per Capita'},
-                yaxis={'title': 'Life Expectancy'},
-                margin={'l':40, 'b':40, 't':50, 'r':10},
-                legend={'x': 0, 'y':1},
-                hovermode='closest'
-            )
-        }
-    ),
-
-    html.H4('Markdown example'),
-    dcc.Markdown(markdown_text),
-
-    html.H4('Components examples'),
-    html.Label('Dropdown'),
-    dcc.Dropdown(
-        options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': 'San Francisco', 'value': 'SF'}
-        ],
-        value='SF'
-    ),
-
-    html.Label('Multi-Selection'),
-    dcc.Dropdown(
-        options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': 'San Francisco', 'value': 'SF'}
-        ],
-        value=['NYC', 'SF'],
-        multi = True
-    ),
-
-    html.Label('Radio Items'),
-    dcc.RadioItems(
-        options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': 'San Francisco', 'value': 'SF'}
-        ],
-        value='SF'
-    ),
-
-    html.Label('Checkboxes'),
-    dcc.Checklist(
-        options=[
-            {'label': 'New York City', 'value': 'NYC'},
-            {'label': 'San Francisco', 'value': 'SF'}
-        ],
-        values=['NYC', 'SF'],
-    ),
-
-    html.Label('Text Input'),
-    dcc.Input(value='SF', type='text'),
-
-    html.Label('Slider'),
+    html.H4('Graph with Slider example'),
+    dcc.Graph(id='graph-with-slider'),
     dcc.Slider(
-        min = 0,
-        max = 9,
-        marks = {i: 'Label {}'.format(i) if i == 1 else str(i) for i in range(1, 6)},
-        value=5,
-    )
-
-
+        id='year-slider',
+        min=df['year'].min(),
+        max=df['year'].max(),
+        value=df['year'].min(),
+        marks={str(year): str(year) for year in df['year'].unique()},
+        step= None
+    ),
     
+    html.Hr(),
+    html.H4('Multiple Inputs'),
+    html.Div([
+            dcc.Dropdown(
+                id='xaxis-column',
+                options=[{'label': i, 'value':i} for i in available_indicators],
+                value='Fertility rate, total (births per woman)'
+            ),
+            dcc.RadioItems(
+                id='xaxis-type',
+                options=[{'label':i, 'value':i} for i in ['Linear', 'Log']],
+                labelStyle={'display': 'inline-block'}
+            )
+        ],
+        style={'width': '48%', 'display': 'inline-block'}),
+
+        html.Div([
+            dcc.Dropdown(
+                id='yaxis-column',
+                options=[{'label': i, 'value':i} for i in available_indicators],
+                value='Life expectancy at birth, total (years)'
+            ),
+            dcc.RadioItems(
+                id='yaxis-type',
+                options=[{'label':i, 'value':i} for i in ['Linear', 'Log']],
+                labelStyle={'display': 'inline-block'}
+            )
+        ],
+        style={'width': '48%', 'display': 'inline-block'}),
+
+        dcc.Graph(id='indicator-graphic'),
+
+        dcc.Slider(
+        id='year--slider',
+        min=df['year'].min(),
+        max=df['year'].max(),
+        value=df['year'].min(),
+        marks={str(year): str(year) for year in df['year'].unique()},
+        step= None
+    ),
+
+    html.Hr(),
+    html.H4('Multiple Outputs'),
+    dcc.Input(
+        id='num',
+        type='number',
+        value=5
+    ),
+    html.Table([
+        html.Tr([html.Td(['x', html.Sup(2)]),html.Td(id='square')]),
+        html.Tr([html.Td(['x', html.Sup(3)]),html.Td(id='cube')]),
+        html.Tr([html.Td([2, html.Sup('x')]),html.Td(id='twos')]),
+        html.Tr([html.Td([3, html.Sup('x')]),html.Td(id='threes')]),
+        html.Tr([html.Td(['x', html.Sup('x')]),html.Td(id='x^x')]),
+        
+    ]),
+    html.Hr(),
+    html.H4('Chained Callbacks'),
+    html.Div(
+        [dcc.RadioItems(
+            id='countries-dropdown',
+            options=[{'label':k, 'value': k} for k in all_optioins.keys()],
+            value='America'
+        )],
+        style={'width': '48%', 'display': 'inline-block'}),
+    html.Div(
+        [dcc.RadioItems(id='cities-dropdown')],
+        style={'width': '48%', 'display': 'inline-block'}),
+    html.Div(id='display-selected-values')
+
+
 ])
 
-if __name__ == '__main__':
-    app.run_server(host='0.0.0.0',debug=True)
+@app.callback(
+    Output(component_id='my-div', component_property='children'),
+    [Input(component_id='my-id', component_property='value')]
+)
+def update_output_div(input_value):
+    return 'You\'ve entered {}'.format(input_value)
+
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    [Input('year-slider', 'value')])
+def update_figure(selected_year):
+    filtered_df = df[df.year == selected_year]
+    traces = []
+    for i in filtered_df.continent.unique():
+        df_by_continent = filtered_df[filtered_df['continent'] == i]
+        traces.append(go.Scatter(
+            x=df_by_continent['gdpPercap'],
+            y=df_by_continent['lifeExp'],
+            text=df_by_continent['country'],
+            mode='markers',
+            opacity=0.7,
+            marker={
+                'size': 15,
+                'line': {'width':0.5, 'color': 'white'}
+            },
+            name=i
+        ))
+    return {
+        'data': traces,
+        'layout': go.Layout(
+            xaxis={'type':'log', 'title': 'GDP Per Capita'},
+            yaxis={'title': 'Life Expectancy', 'range':[20, 90]},
+            margin={'l':40, 'b':40, 't':10, 'r':10},
+            hovermode='closest'
+        )
+    }
+
+#### Multiple Inputs
+@app.callback(
+    Output('indicator-graphic', 'figure'),
+    [
+        Input('xaxis-column', 'value'),
+        Input('yaxis-column', 'value'),
+        Input('xaxis-type', 'value'),
+        Input('yaxis-type', 'value'),
+        Input('year--slider', 'value')
+
+    ])
+def update_graph(xaxis_column_name, yaxis_column_name, xaxis_type, yaxis_type, year_value):
+    dff = df2[df2['Year'] == year_value]
+ 
+    return {
+        'data': [go.Scatter(
+            x=dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+            y=dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
+            text=dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
+            mode='markers',
+            marker={
+                'size': 15,
+                'opacity': 0.5,
+                'line': {'width': 0.5, 'color': 'white'}
+            }
+        )],
+        'layout': go.Layout(
+            xaxis={
+                'title': xaxis_column_name,
+                'type': 'linear' if xaxis_type == 'Linear' else 'log'
+            },
+            yaxis={
+                'title': yaxis_column_name,
+                'type': 'linear' if yaxis_type == 'Linear' else 'log'
+            },
+            margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+            hovermode='closest'
+        )
+    }
+
+#### Multiple Outputs
+@app.callback(
+    [
+        Output('square', 'children'),
+        Output('cube', 'children'),
+        Output('twos', 'children'),
+        Output('threes', 'children'),
+        Output('x^x', 'children')
+    ],
+    [Input('num', 'value')]
+)
+def callback_a(x):
+    return x**2, x**3, 2**x, 3**x, x**x
+
+
+#### Chained Callback
+@app.callback(
+    Output('cities-dropdown', 'options'),
+    [Input('countries-dropdown', 'value')])
+def set_cities_options(selected_country):
+    return [{'label':i, 'value':i} for i in all_optioins[selected_country]]
+
+@app.callback(
+    Output('cities-dropdown', 'value'),
+    [Input('cities-dropdown', 'options')])
+def set_cities_values(avaiable_options):
+    return avaiable_options[0]['value'] # it sets it to the first value in that options array.
+
+@app.callback(
+    Output('display-selected-values', 'children'),
+    [
+        Input('countries-dropdown', 'value'),
+        Input('cities-dropdown', 'value')])
+def set_display_children(selected_country, selected_city):
+    return u'{} is a city in {}'.format(
+        selected_city, selected_country,
+    )
+
+if __name__=='__main__':
+    app.run_server(host='0.0.0.0', debug=True)
